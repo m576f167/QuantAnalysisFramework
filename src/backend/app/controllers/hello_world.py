@@ -1,6 +1,8 @@
-from app import app
+""" Default controller for hello world """
 
-@app.route('/')
-@app.route('/index')
+from . import bp
+
+@bp.route('/')
+@bp.route('/index')
 def index():
     return "Hello, World!"
