@@ -2,4 +2,7 @@
 *.swa
 __pycache__
 .DS_Store
+build
 logs
+*.rst
+!index.rst
