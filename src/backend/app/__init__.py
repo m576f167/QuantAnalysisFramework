@@ -4,12 +4,7 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 from flask import Flask
-from flask_mongoalchemy import MongoAlchemy
-from flask_migrate import Migrate
 from config import Config
-
-db = MongoAlchemy()
-migrate = Migrate()
 
 def create_app(config_class = Config, load_from_envvar = True):
     """
@@ -35,9 +30,6 @@ def create_app(config_class = Config, load_from_envvar = True):
     app.config.from_object(config_class)
     if load_from_envvar:
         app.config.from_envvar('CONFIG_FILE')
-
-    db.init_app(app)
-    migrate.init_app(app)
 
     from app.controllers import bp as bp_controllers
     app.register_blueprint(bp_controllers)

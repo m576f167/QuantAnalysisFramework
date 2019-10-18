@@ -1,4 +1,4 @@
 Flask
 alpaca-trade-api
-Flask-MongoAlchemy
-Flask-Migrate
+pymongo
+sphinx
