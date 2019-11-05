@@ -1,5 +1,6 @@
 Flask
+Flask-Injector
 python-dotenv
 alpaca-trade-api
-pymongo
+flask-mongoengine
 sphinx
