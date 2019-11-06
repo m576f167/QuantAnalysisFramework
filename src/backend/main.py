@@ -2,9 +2,6 @@
 
 import sys
 from app import create_app
+from app.config_injector import ConfigInjector
 
-def main(argv):
-    app = create_app()
-
-if __name__ == '__main__':
-    main(sys.argv[1:])
+app = create_app(modules = [ ConfigInjector ])

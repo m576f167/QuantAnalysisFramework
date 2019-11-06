@@ -4,9 +4,22 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 from flask import Flask
+from flask_injector import FlaskInjector
+from flask_mongoengine import MongoEngine
 from config import Config
 
-def create_app(config_class = Config, load_from_envvar = True):
+def create_db_client():
+    """
+    Create an instance of database client
+
+    Returns
+    -------
+    object
+        A database client
+    """
+    return MongoEngine()
+
+def create_app(config_class = Config, modules = [], load_from_envvar = True):
     """
     Create an instance of Flask application and configure it according to the
     config_class and environment variable
@@ -16,6 +29,8 @@ def create_app(config_class = Config, load_from_envvar = True):
     config_class : object, optional
         The object containing configuration for the application (default is Config
         object stored in config.py)
+    modules: list, optional
+        A list of modules for FlaskInjector
     load_from_envvar : bool, optional
         Whether we want to load configuration from a file referred by the value
         of 'CONFIG_FILE' environment variable (default is True)
@@ -30,6 +45,9 @@ def create_app(config_class = Config, load_from_envvar = True):
     app.config.from_object(config_class)
     if load_from_envvar:
         app.config.from_envvar('CONFIG_FILE')
+
+    db_client = create_db_client()
+    db_client.init_app(app)
 
     from app.controllers import bp as bp_controllers
     app.register_blueprint(bp_controllers)
@@ -51,4 +69,5 @@ def create_app(config_class = Config, load_from_envvar = True):
         app.logger.setLevel(logging.INFO)
         app.logger.info('Application Started')
 
+    FlaskInjector(app = app, modules = modules)
     return app
