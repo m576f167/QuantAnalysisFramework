@@ -8,7 +8,8 @@ __ROOT_PATH = '/asset_universe/{}'
 
 @bp.route(__ROOT_PATH.format(''),
           methods = ["GET"])
-def get_all(asset_universe_manager: AssetUniverseManager):
+def asset_universe_controller_get_all(
+    asset_universe_manager: AssetUniverseManager):
     """
     Get all asset symbols in asset universe
 
@@ -26,8 +27,9 @@ def get_all(asset_universe_manager: AssetUniverseManager):
 
 @bp.route(__ROOT_PATH.format('<string:symbol>'),
           methods = ["GET"])
-def contains(asset_universe_manager: AssetUniverseManager,
-             symbol):
+def asset_universe_controller_contains(
+    asset_universe_manager: AssetUniverseManager,
+    symbol):
     """
     Check if the asset universe contains the asset symbol
 
@@ -47,8 +49,9 @@ def contains(asset_universe_manager: AssetUniverseManager,
 
 @bp.route(__ROOT_PATH.format('<string:symbol>'),
           methods = ["POST", "PUT"])
-def insert(asset_universe_manager: AssetUniverseManager,
-           symbol):
+def asset_universe_controller_insert(
+    asset_universe_manager: AssetUniverseManager,
+    symbol):
     """
     Insert asset symbol to the asset universe
 
@@ -68,8 +71,9 @@ def insert(asset_universe_manager: AssetUniverseManager,
 
 @bp.route(__ROOT_PATH.format('<string:symbol>'),
           methods = ["DELETE"])
-def delete(asset_universe_manager: AssetUniverseManager,
-           symbol):
+def asset_universe_controller_delete(
+    asset_universe_manager: AssetUniverseManager,
+    symbol):
     """
     Delete asset symbol from the asset universe
 

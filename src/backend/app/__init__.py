@@ -1,12 +1,12 @@
 """ Flask application configuration  """
 
-import os
 import logging
-from logging.handlers import RotatingFileHandler
 from flask import Flask
 from flask_injector import FlaskInjector
 from flask_mongoengine import MongoEngine
 from config import Config
+from injector import Injector
+from app.services.common.logging.logger import Logger
 
 def create_db_client():
     """
@@ -14,12 +14,12 @@ def create_db_client():
 
     Returns
     -------
-    object
+    MongoEngine
         A database client
     """
     return MongoEngine()
 
-def create_app(config_class = Config, modules = [], load_from_envvar = True):
+def create_app(config_class = Config, modules = [], injector = None, load_from_envvar = True):
     """
     Create an instance of Flask application and configure it according to the
     config_class and environment variable
@@ -37,10 +37,9 @@ def create_app(config_class = Config, modules = [], load_from_envvar = True):
 
     Returns
     -------
-    object
+    Flask
         A Flask application instance generated
     """
-
     app = Flask(__name__)
     app.config.from_object(config_class)
     if load_from_envvar:
@@ -55,19 +54,13 @@ def create_app(config_class = Config, modules = [], load_from_envvar = True):
     from app.error_handlers import bp as bp_error_handlers
     app.register_blueprint(bp_error_handlers)
 
-    if not app.debug and not app.testing:
-        if not os.path.exists('logs'):
-            os.mkdir('logs')
-        file_handler = RotatingFileHandler('logs/application.log',
-                                           backupCount = 10)
-        file_handler.setFormatter(logging.Formatter(
-            '%(asctime)s %(levelname)s: %(message)s '
-            '[in %(pathname)s:%(lineno)d]'
-        ))
-        file_handler.setLevel(logging.INFO)
-        app.logger.addHandler(file_handler)
-        app.logger.setLevel(logging.INFO)
-        app.logger.info('Application Started')
+    if injector is None:
+        injector = Injector()
+    FlaskInjector(app = app, modules = modules, injector = injector)
 
-    FlaskInjector(app = app, modules = modules)
+    if not app.debug and not app.testing:
+        logger = injector.get(Logger)
+        logger.set_flask_app(app)
+        logger.write(logging.INFO, 'Application Started')
+
     return app
