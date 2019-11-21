@@ -84,9 +84,9 @@ def asset_universe_controller_insert(
     """
     try:
         asset_universe_manager.insert(symbol)
-        return '', 201
     except OperationError as error:
         abort(404, str(error))
+    return '', 201
 
 @bp.route(__ROOT_PATH.format('<string:symbol>'),
           methods = ["DELETE"])
@@ -115,6 +115,6 @@ def asset_universe_controller_delete(
     """
     try:
         asset_universe_manager.delete(symbol)
-        return '', 204
     except LookupError as error:
         abort(404, str(error))
+    return '', 204
