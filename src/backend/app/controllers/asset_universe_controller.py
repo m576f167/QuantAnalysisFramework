@@ -2,6 +2,8 @@
 
 from . import bp
 from app.services.alpaca.asset_universe_manager import AssetUniverseManager
+from flask import abort
+from mongoengine import OperationError
 import json
 
 __ROOT_PATH = '/asset_universe/{}'
@@ -43,9 +45,17 @@ def asset_universe_controller_contains(
     Returns
     -------
     string
-        A JSON string of true (on existence) or false
+        204 No content if symbol exist
+
+    Raises
+    ------
+    HTTPException
+        404 if symbol does not exist
     """
-    return json.dumps(asset_universe_manager.contains(symbol))
+    if asset_universe_manager.contains(symbol):
+        return '', 204
+    else:
+        abort(404, 'Symbol does not exist')
 
 @bp.route(__ROOT_PATH.format('<string:symbol>'),
           methods = ["POST", "PUT"])
@@ -65,9 +75,18 @@ def asset_universe_controller_insert(
     Returns
     -------
     string
-        A JSON string of true (on success) or false
+        201 if symbol is created
+
+    Raises
+    ------
+    HTTPException
+        404 if symbol is not created
     """
-    return json.dumps(asset_universe_manager.insert(symbol))
+    try:
+        asset_universe_manager.insert(symbol)
+        return '', 201
+    except OperationError as error:
+        abort(404, str(error))
 
 @bp.route(__ROOT_PATH.format('<string:symbol>'),
           methods = ["DELETE"])
@@ -87,6 +106,15 @@ def asset_universe_controller_delete(
     Returns
     -------
     string
-        A JSON string of true (on success) or false
+        204 No content if symbol is deleted
+
+    Raises
+    ------
+    HTTPException
+        404 if symbol does not exist
     """
-    return json.dumps(asset_universe_manager.delete(symbol))
+    try:
+        asset_universe_manager.delete(symbol)
+        return '', 204
+    except LookupError as error:
+        abort(404, str(error))

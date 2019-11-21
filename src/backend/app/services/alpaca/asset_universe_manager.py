@@ -23,15 +23,9 @@ class AssetUniverseManager:
         ----------
         symbol : String
             An asset symbol String
-
-        Returns
-        -------
-        boolean
-            True if successful, False otherwise
         """
         document = AssetUniverseModel(symbol = symbol)
         document.save()
-        return True
 
     def delete(self, symbol):
         """
@@ -42,17 +36,16 @@ class AssetUniverseManager:
         symbol : String
             An asset symbol String
 
-        Returns
-        -------
-        boolean
-            True if successful, False otherwise
+        Raises
+        ------
+        LookupError
+            If the symbol to be deleted does not exist
         """
         document = AssetUniverseModel.objects(symbol = symbol)
         if document:
             document.delete()
-            return True
         else:
-            return False
+            raise LookupError('[AssetUniverseManager]: symbol does not exist')
 
     def contains(self, symbol):
         """

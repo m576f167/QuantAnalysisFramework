@@ -51,9 +51,6 @@ def create_app(config_class = Config, modules = [], injector = None, load_from_e
     from app.controllers import bp as bp_controllers
     app.register_blueprint(bp_controllers)
 
-    from app.error_handlers import bp as bp_error_handlers
-    app.register_blueprint(bp_error_handlers)
-
     if injector is None:
         injector = Injector()
     FlaskInjector(app = app, modules = modules, injector = injector)
