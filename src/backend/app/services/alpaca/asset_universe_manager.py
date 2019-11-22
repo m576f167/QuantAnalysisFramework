@@ -1,9 +1,29 @@
+import logging
+from alpaca_trade_api import REST as ApiREST
+from alpaca_trade_api.rest import APIError
+from app.models.adapter.alpaca.asset_universe_adapter import AssetUniverseAdapter
 from app.models.asset_universe_model import AssetUniverseModel
+from app.services.common.logging.logger import Logger
+from mongoengine import OperationError
 
 class AssetUniverseManager:
     """
     A class for managing asset universe
     """
+    def __init__(self, api_rest: ApiREST, logger: Logger):
+        """
+        Constructor to initialize AssetUniverseManager
+
+        Parameters
+        ----------
+        api_rest : ApiREST
+            An ApiREST instance
+        logger : Logger
+            A Logger instance
+        """
+        self.__api_rest__ = api_rest
+        self.logger = logger
+
     def get_all(self):
         """
         Get all asset symbols in asset universe
@@ -13,7 +33,8 @@ class AssetUniverseManager:
         list
             A list of asset symbols in the asset universe
         """
-        return [document.symbol for document in AssetUniverseModel.objects]
+        return [document.to_mongo().to_dict()
+                for document in AssetUniverseModel.objects]
 
     def insert(self, symbol):
         """
@@ -23,9 +44,26 @@ class AssetUniverseManager:
         ----------
         symbol : String
             An asset symbol String
+
+        Raises
+        ------
+        LookupError
+            If the symbol could not be found in Alpaca
+        OperationError
+            If could not save the symbol in Database
         """
-        document = AssetUniverseModel(symbol = symbol)
-        document.save()
+        try:
+            asset = self.__api_rest__.get_asset(symbol)
+            document = AssetUniverseAdapter.convert(asset)
+            document.save()
+        except APIError as error:
+            self.logger.write(logging.ERROR,
+                              "Asset symbol {} could not be found in Alpaca\n[{}]".format(symbol, str(error)))
+            raise LookupError("[AssetUniverseManager]: {}".format(str(error)))
+        except OperationError as error:
+            self.logger.write(logging.ERROR,
+                              "Error in saving symbol {} in Database\n[{}]".format(symbol, str(error)))
+            raise error
 
     def delete(self, symbol):
         """
@@ -47,9 +85,9 @@ class AssetUniverseManager:
         else:
             raise LookupError('[AssetUniverseManager]: symbol does not exist')
 
-    def contains(self, symbol):
+    def get(self, symbol):
         """
-        Check if the asset universe contains the asset symbol
+        Get an asset with the requested symbol in the Asset Universe
 
         Parameters
         ----------
@@ -58,7 +96,16 @@ class AssetUniverseManager:
 
         Returns
         -------
-        boolean
-            True if successful, False otherwise
+        dict
+            dict representation of the asset
+
+        Raises
+        ------
+        LookupError
+            If the symbol to be retrieved does not exist
         """
-        return True if AssetUniverseModel.objects(symbol = symbol) else False
+        document = AssetUniverseModel.objects(symbol = symbol)[0]
+        if document:
+            return document.to_mongo().to_dict()
+        else:
+            raise LookupError('[AssetUniverseManager]: symbol does not exist')

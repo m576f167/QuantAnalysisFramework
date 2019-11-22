@@ -4,7 +4,7 @@ from . import bp
 from app.services.alpaca.asset_universe_manager import AssetUniverseManager
 from flask import abort
 from mongoengine import OperationError
-import json
+from bson import json_util as json
 
 __ROOT_PATH = '/asset_universe/{}'
 
@@ -29,11 +29,11 @@ def asset_universe_controller_get_all(
 
 @bp.route(__ROOT_PATH.format('<string:symbol>'),
           methods = ["GET"])
-def asset_universe_controller_contains(
+def asset_universe_controller_get(
     asset_universe_manager: AssetUniverseManager,
     symbol):
     """
-    Check if the asset universe contains the asset symbol
+    Get an asset with the requested symbol in the Asset Universe
 
     Parameters
     ----------
@@ -45,17 +45,18 @@ def asset_universe_controller_contains(
     Returns
     -------
     string
-        204 No content if symbol exist
+        200 The json representation of the asset with the requested symbol
 
     Raises
     ------
     HTTPException
         404 if symbol does not exist
     """
-    if asset_universe_manager.contains(symbol):
-        return '', 204
-    else:
-        abort(404, 'Symbol does not exist')
+    try:
+        asset = asset_universe_manager.get(symbol)
+        return json.dumps(asset), 200
+    except LookupError as error:
+        abort(404, str(error))
 
 @bp.route(__ROOT_PATH.format('<string:symbol>'),
           methods = ["POST", "PUT"])
@@ -84,6 +85,8 @@ def asset_universe_controller_insert(
     """
     try:
         asset_universe_manager.insert(symbol)
+    except LookupError as error:
+        abort(404, str(error))
     except OperationError as error:
         abort(404, str(error))
     return '', 201

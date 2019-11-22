@@ -3,7 +3,7 @@
 from . import bp
 from app.services.common.task.task_manager import TaskManager
 from flask import abort
-import json
+from bson import json_util as json
 
 __ROOT_PATH = '/task/{}'
 
